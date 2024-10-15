@@ -26,7 +26,7 @@ from geventhttpclient._parser import HTTPParseError
 from geventhttpclient.client import HTTPClientPool
 from geventhttpclient.header import Headers
 from geventhttpclient.response import HTTPConnectionClosed, HTTPSocketPoolResponse
-from geventhttpclient.useragent import CompatRequest, CompatResponse, ConnectionError, UserAgent
+from geventhttpclient.useragent import CompatRequest, CompatResponse, ConnectionError, UserAgent, BadStatusCode
 
 # borrow requests's content-type header parsing
 from requests.utils import get_encoding_from_headers
@@ -605,6 +605,12 @@ class LocustUserAgent(UserAgent):
             request.method, request.url_split.request_uri, body=request.payload, headers=request.headers
         )
         return self.response_type(resp, request=request, sent_request=resp._sent_request)
+    
+    def _verify_status(self, status_code, url=None):
+        """Hook for subclassing"""
+        if status_code not in self.valid_response_codes:
+            raise BadStatusCode(code=status_code)
+            
 
 
 class ResponseContextManager(FastResponse):
